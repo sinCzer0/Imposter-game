@@ -1,139 +1,295 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>Imposter Game</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Imposter Game" />
-<link rel="manifest" href="manifest.json" />
-<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  margin:0;
-  min-height:100vh;
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
   background: linear-gradient(135deg, #ff512f, #dd2476, #f7b733, #fc4a1a);
   background-size: 400% 400%;
-  color:white;
-  overflow:hidden;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  -webkit-tap-highlight-color: transparent;
-  animation:backgroundAnim 30s ease infinite;
+  animation: backgroundAnim 30s ease infinite;
+  color: white;
 }
-@keyframes backgroundAnim {
-  0%{background-position:0% 50%;}
-  50%{background-position:100% 50%;}
-  100%{background-position:0% 50%;}
-}
-.card {
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(25px);
-  border-radius: 32px;
-  padding: 28px;
-  width:95%;
-  max-width:460px;
-  box-shadow:0 30px 60px rgba(0,0,0,0.55);
-  animation:fadeIn 0.5s ease;
-  position:relative;
-  z-index:10;
-  touch-action: manipulation;
-  border: 2px solid rgba(255,255,255,0.3);
-}
-h2,h3{margin-top:0;text-align:center;}
-label{display:block;margin-top:14px;font-size:16px;opacity:0.95;}
-input,select{width:100%;padding:16px;margin-top:6px;border-radius:18px;border:none;font-size:18px;}
-button{width:100%;margin-top:16px;padding:18px;font-size:18px;border:none;border-radius:22px;background:linear-gradient(135deg,#ff512f,#dd2476,#fbc531,#ff4b1f);color:white;font-weight:800;cursor:pointer;transition:transform 0.15s ease,box-shadow 0.15s ease, opacity 0.15s ease, filter 0.2s ease;}
-button:hover{filter:brightness(1.15) drop-shadow(0 0 8px rgba(255,255,255,0.6));}
-button:active, .vote-btn.selected{transform:scale(0.95); opacity:0.75;}
+@keyframes backgroundAnim {0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+.card {background: rgba(255,255,255,0.15); backdrop-filter: blur(25px); border-radius: 32px; padding:28px; width:95%; max-width:480px; box-shadow:0 30px 60px rgba(0,0,0,0.55);}
+button{width:100%; margin-top:16px; padding:18px; font-size:18px; border:none; border-radius:22px; background:linear-gradient(135deg,#ff512f,#dd2476,#fbc531,#ff4b1f); color:white; font-weight:800; cursor:pointer;}
+button:active{transform:scale(0.95); opacity:0.75;}
 .hidden{display:none;}
 .center{text-align:center;}
-.countdown{font-size:78px;font-weight:bold;color:#ffeaa7;animation:pop 0.4s ease;}
-.reveal{font-size:28px;margin-top:20px;color:#81ecec;animation:pop 0.4s ease;}
-ul{padding-left:20px;}
-.floating-icon{position:absolute;width:40px;height:40px;opacity:0.85;animation:float 8s linear infinite;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
-@keyframes pop{0%{transform:scale(0.7);}50%{transform:scale(1.2);}100%{transform:scale(1);}}
+.floating-icon{position:absolute;font-size:32px; opacity:0.8; animation:float 10s linear infinite;}
 @keyframes float{0%{transform:translateY(100vh) translateX(0) rotate(0deg);}50%{transform:translateY(50vh) translateX(10vw) rotate(180deg);}100%{transform:translateY(-10vh) translateX(20vw) rotate(360deg);}}
+.countdown{font-size:20px; margin-top:10px;}
 </style>
 </head>
 <body>
 <div class="card">
-<div id="setupScreen">
-<h2>🎉 Imposter Game 🎉</h2>
-<label>Category</label>
-<select id="categorySelect">
-<option value="NBA">NBA Players & Teams</option>
-<option value="Movies">Movies</option>
-<option value="VideoGames">Video Games & Characters</option>
-<option value="Anime">Anime & Characters</option>
-<option value="Rappers">Rappers</option>
-</select>
-<label>Players</label>
-<input type="number" id="numPlayers" value="3" min="2" max="20" />
-<label>Imposters</label>
-<input type="number" id="numImposters" value="1" min="1" max="10" />
-<button onclick="createPlayerInputs()">Next</button>
+  <div id="setupScreen">
+    <h2>🎉 Imposter Game 🎉</h2>
+    <label>Category</label>
+    <select id="categorySelect"></select>
+    <label>Players</label>
+    <input type="number" id="numPlayers" value="3" min="2" max="20">
+    <label>Imposters</label>
+    <input type="number" id="numImposters" value="1" min="1" max="10">
+    <button id="nextBtn">Next</button>
+  </div>
+
+  <div id="playerScreen" class="hidden">
+    <h3>Enter Player Names</h3>
+    <div id="playerInputs"></div>
+    <button id="startBtn">Start Game</button>
+  </div>
+
+  <div id="revealScreen" class="hidden center">
+    <div id="revealText"></div>
+    <button id="nextPlayerBtn">Next Player ⏩</button>
+    <button id="redoBtn">Redo Reveal 🔄</button>
+  </div>
+
+  <div id="voteScreen" class="hidden center">
+    <h3 id="voteTitle"></h3>
+    <div id="voteOptions"></div>
+    <button id="submitVoteBtn" class="hidden"></button>
+  </div>
+
+  <div id="scoreScreen" class="hidden center">
+    <h3>Scoreboard 🏆</h3>
+    <ul id="scoreList"></ul>
+    <button id="nextRoundBtn">Next Round ▶️</button>
+    <button id="changeTopicBtn">Change Topic 🔄</button>
+  </div>
 </div>
-<div id="playerScreen" class="hidden">
-<h3>Enter Player Names</h3>
-<div id="playerInputs"></div>
-<button onclick="startRound()">Start Game</button>
-</div>
-<div id="passScreen" class="hidden center">
-<h3 id="passTitle"></h3>
-<button onclick="startCountdown()">Reveal 🎲</button>
-</div>
-<div id="countdownScreen" class="hidden center">
-<div id="countdown" class="countdown"></div>
-</div>
-<div id="revealScreen" class="hidden center">
-<div id="revealText" class="reveal"></div>
-<button onclick="nextPlayer()">Hide & Pass Phone ⏩</button>
-<button onclick="redoReveal()">Redo Reveal 🔄</button>
-</div>
-<div id="voteScreen" class="hidden center">
-<h3>Vote for the Imposter 🕵️‍♂️</h3>
-<div id="voteOptions"></div>
-<button onclick="startDiscussion()">Start Discussion 💬</button>
-</div>
-<div id="timerScreen" class="hidden center">
-<h3>Discussion Time ⏱️</h3>
-<div id="timer" class="countdown"></div>
-<button onclick="endDiscussion()">End Early ⏹️</button>
-</div>
-<div id="scoreScreen" class="hidden center">
-<h3>Scoreboard 🏆</h3>
-<ul id="scoreList"></ul>
-<button onclick="nextRound()">Next Round ▶️</button>
-</div>
-</div>
+
 <audio id="lofi" src="https://assets.mixkit.co/music/preview/mixkit-lo-fi-chill-hop-145.mp3" loop autoplay playsinline></audio>
-<audio id="beep" src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" playsinline></audio>
+
 <script>
-const topics = {NBA:["LeBron James","Michael Jordan","Kobe Bryant"], Movies:["The Godfather","Inception"], VideoGames:["Mario","Link","Lara Croft"], Anime:["Naruto","Goku","Luffy"], Rappers:["Kendrick Lamar","Drake"]};
-let secretTopic=""; let playerNames=[]; let roles=[]; let currentPlayer=0; let votes={}; let scores={}; let discussionTime=20; let revealedTopics=[];
-let maxVotes=0;
-function vibrate(ms=200){if(navigator.vibrate) navigator.vibrate(ms);}
-function playBeep(){document.getElementById('beep').play();}
-function createPlayerInputs(){setupScreen.classList.add('hidden'); playerScreen.classList.remove('hidden'); playerInputs.innerHTML=''; for(let i=0;i<+numPlayers.value;i++){const input=document.createElement('input'); input.placeholder=`Player ${i+1}`; input.id=`player_${i}`; playerInputs.appendChild(input);}}
-function startRound(){const cat=categorySelect.value;revealedTopics=topics[cat].sort(()=>0.5-Math.random()).slice(); if(secretTopic==="") secretTopic=revealedTopics.shift(); playerNames=[]; maxVotes=+numPlayers.value; for(let i=0;i<+numPlayers.value;i++){const name=document.getElementById(`player_${i}`).value.trim(); if(!name)return alert('Fill all names'); playerNames.push(name); scores[name]=scores[name]||0;}
-roles=Array(playerNames.length).fill(secretTopic); for(let i=0;i<+numImposters.value;i++)roles[i]=null; roles.sort(()=>Math.random()-0.5); playerScreen.classList.add('hidden'); currentPlayer=0; showPass(); generateFloatingIcons(cat);}
-function showPass(){passScreen.classList.remove('hidden'); revealScreen.classList.add('hidden'); passTitle.textContent=`Pass phone to ${playerNames[currentPlayer]}`;}
-function startCountdown(){passScreen.classList.add('hidden'); countdownScreen.classList.remove('hidden'); let count=3; countdown.textContent=count; playBeep(); vibrate(100); const interval=setInterval(()=>{count--; if(count===0){clearInterval(interval);countdownScreen.classList.add('hidden'); revealRole();} else{countdown.textContent=count; playBeep(); vibrate(100);}},700);}
-function revealRole(){revealScreen.classList.remove('hidden'); revealText.textContent=roles[currentPlayer]?`Your topic: ${roles[currentPlayer]} ✅`:'You are the IMPOSTER ❌'; vibrate(300);}
-function redoReveal(){roles[currentPlayer]=secretTopic; revealRole();}
-function nextPlayer(){currentPlayer++; if(currentPlayer>=playerNames.length){revealScreen.classList.add('hidden'); showVoting(); return;} showPass();}
-function showVoting(){votes={}; voteScreen.classList.remove('hidden'); voteOptions.innerHTML=''; let voteCount=0; playerNames.forEach(name=>{const btn=document.createElement('button'); btn.textContent=name; btn.classList.add('vote-btn'); btn.onclick=()=>{if(!btn.classList.contains('selected') && voteCount>=maxVotes) return; btn.classList.toggle('selected'); btn.style.opacity=btn.classList.contains('selected')?0.6:1; voteCount=Array.from(document.querySelectorAll('.vote-btn.selected')).length;}; voteOptions.appendChild(btn);});}
-function startDiscussion(){voteScreen.classList.add('hidden'); timerScreen.classList.remove('hidden'); let t=discussionTime; timer.textContent=t; const interval=setInterval(()=>{t--; timer.textContent=t; if(t<=0){clearInterval(interval); timerScreen.classList.add('hidden'); showScores();}},1000);}
-function endDiscussion(){timerScreen.classList.add('hidden'); showScores();}
-function showScores(){scoreScreen.classList.remove('hidden'); scoreList.innerHTML=''; playerNames.forEach(name=>{let score=(roles[playerNames.indexOf(name)]===null?1:0)+(votes[name]||0); scores[name]+=score; const li=document.createElement('li'); li.textContent=`${name}: ${scores[name]}`; scoreList.appendChild(li);});}
-function nextRound(){scoreScreen.classList.add('hidden'); currentPlayer=0; votes={}; roles=[]; showPass();}
-function generateFloatingIcons(category){document.querySelectorAll('.floating-icon').forEach(e=>e.remove()); const emojis={"NBA":"🏀","Movies":"🎬","VideoGames":"🎮","Anime":"🌸","Rappers":"🎤"}; for(let i=0;i<35;i++){const icon=document.createElement('div'); icon.className='floating-icon'; icon.textContent=emojis[category]||'✨'; icon.style.left=Math.random()*90+'vw'; icon.style.top=Math.random()*90+'vh'; icon.style.fontSize=(24+Math.random()*24)+'px'; document.body.appendChild(icon);}}
-if('serviceWorker' in navigator){navigator.serviceWorker.register('service-worker.js');}
+// Elements
+const setupScreen = document.getElementById('setupScreen');
+const playerScreen = document.getElementById('playerScreen');
+const playerInputs = document.getElementById('playerInputs');
+const revealScreen = document.getElementById('revealScreen');
+const revealText = document.getElementById('revealText');
+const redoBtn = document.getElementById('redoBtn');
+const nextPlayerBtn = document.getElementById('nextPlayerBtn');
+const voteScreen = document.getElementById('voteScreen');
+const voteTitle = document.getElementById('voteTitle');
+const voteOptions = document.getElementById('voteOptions');
+const scoreScreen = document.getElementById('scoreScreen');
+const scoreList = document.getElementById('scoreList');
+const nextRoundBtn = document.getElementById('nextRoundBtn');
+const changeTopicBtn = document.getElementById('changeTopicBtn');
+const numPlayersInput = document.getElementById('numPlayers');
+const numImpostersInput = document.getElementById('numImposters');
+const categorySelect = document.getElementById('categorySelect');
+const startBtn = document.getElementById('startBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+// Game state
+let playerNames = [];
+let currentCategory = '';
+let secretTopic = '';
+let scores = {};
+let revealIndex = 0;
+let impostersIndexes = [];
+let revealedTopics = [];
+let currentVoterIndex = 0;
+let votes = [];
+
+// Topics (expanded)
+const topics = {
+  NBA:["LeBron James","Stephen Curry","Kawhi Leonard","Giannis Antetokounmpo","Kevin Durant","James Harden","Anthony Davis","Joel Embiid","Luka Doncic","Zion Williamson","Jayson Tatum","Damian Lillard","Trae Young","Karl-Anthony Towns","Bradley Beal","Devin Booker","Jimmy Butler","Chris Paul","Russell Westbrook","Ben Simmons","Kyrie Irving","Paul George","Klay Thompson","Draymond Green","Rudy Gobert","Donovan Mitchell","Nikola Jokic","Julius Randle","Ja Morant","DeMar DeRozan","Fred VanVleet","Bam Adebayo","Tyler Herro","Jaren Jackson Jr.","Jaylen Brown","Domantas Sabonis","CJ McCollum","Pascal Siakam","Zach LaVine","Michael Jordan","Kobe Bryant","Shaquille O'Neal","Magic Johnson","Larry Bird","Tim Duncan","Hakeem Olajuwon","Allen Iverson","Charles Barkley","Karl Malone","John Stockton","Scottie Pippen","Patrick Ewing","Derrick Rose","Lakers","Bulls","Celtics","Warriors","Heat","Spurs","Nets","Raptors"],
+  Movies:["The Godfather","Inception","Titanic","The Matrix","Avengers","Pulp Fiction","Forrest Gump","Gladiator","Interstellar","Parasite","Joker","The Dark Knight","Schindler's List","Fight Club","The Lord of the Rings","Harry Potter","The Lion King","Frozen","Toy Story","The Social Network","Inglourious Basterds","Whiplash","La La Land","Coco","The Shining","A Clockwork Orange","Jurassic Park","Star Wars","Guardians of the Galaxy","Black Panther","Avengers: Endgame","Mad Max: Fury Road","The Departed","The Prestige","Django Unchained","The Silence of the Lambs","Braveheart","Goodfellas","The Revenant","Once Upon a Time in Hollywood","Catch Me If You Can","No Country for Old Men","The Sixth Sense","Up","Inside Out","WALL-E","Shutter Island","12 Years a Slave"],
+  VideoGames:["Mario","Link","Lara Croft","Kratos","Samus","Geralt","Master Chief","Sonic","Pac-Man","Mega Man","Solid Snake","Cloud Strife","Leon Kennedy","Ezio Auditore","Doom Slayer","Arthur Morgan","Spyro","Crash Bandicoot","Kirby","Donkey Kong","Ryu","Chun-Li","Sub-Zero","Scorpion","Master Sword","Energy Sword","Buster Sword","Keyblade","Portal Gun","Blaster","Lancer","Gravity Gun","Glaive","Sword of Omens","Lightsaber","Gunblade","Dragon Slayer","Dragonborn Sword","Hidden Blade","Masamune","Final Fantasy Series","Resident Evil Series","Halo Series","Legend of Zelda Series"],
+  Anime:["Naruto","Goku","Luffy","Ichigo","One Punch Man","Sailor Moon","Edward Elric","Levi Ackerman","Light Yagami","Gon Freecss","Eren Yeager","Mikasa Ackerman","Tanjiro Kamado","Nezuko Kamado","Saitama","Koro-sensei","Gintoki Sakata","Spike Spiegel","Vash the Stampede","Yusuke Urameshi","Inuyasha","Kenshin Himura","Totoro","Natsu Dragneel","Lucy Heartfilia","Gray Fullbuster","Erza Scarlet","Shoyo Hinata","Kageyama Tobio","Shikamaru Nara","Kakashi Hatake","Madara Uchiha","Itachi Uchiha","Roronoa Zoro","Sanji","Monkey D. Garp","Kenshiro","Alphonse Elric","Roy Mustang","Sailor Venus","Sailor Jupiter","Bulma","Vegeta","Kurapika","Killua Zoldyck","Yugi Muto","JoJo Series","Naruto Series","Dragon Ball Series","One Piece Series","Bleach Series","Attack on Titan Series"],
+  Rappers:["Kendrick Lamar","Drake","J. Cole","Kanye West","Nicki Minaj","Eminem","Tupac","Biggie","Jay-Z","Snoop Dogg","Nas","Ice Cube","Travis Scott","Megan Thee Stallion","Lil Wayne","Cardi B","Future","Doja Cat","Lil Baby","Dr. Dre","2 Chainz","Rakim","Big Pun","LL Cool J","Q-Tip","Busta Rhymes","Missy Elliott","Method Man","Redman","Killer Mike","Juice WRLD","21 Savage","Lil Uzi Vert","Pop Smoke","Tyler, The Creator","A$AP Rocky","Jadakiss","DMX","Common","The Notorious B.I.G.","T.I.","Young Thug","Mac Miller","Wale","Logic","Chance the Rapper","Andre 3000","E-40","Schoolboy Q","Too $hort"]
+};
+
+// Populate category dropdown
+Object.keys(topics).forEach(cat=>{
+  const opt = document.createElement('option');
+  opt.value = cat;
+  opt.textContent = cat;
+  categorySelect.appendChild(opt);
+});
+
+// --- Event listeners ---
+// Next button -> show player input
+nextBtn.addEventListener('click',()=>{
+  if(!categorySelect.value){ alert('Select a category'); return; }
+  currentCategory = categorySelect.value;
+  setupScreen.classList.add('hidden');
+  playerScreen.classList.remove('hidden');
+  playerInputs.innerHTML='';
+  for(let i=0;i<parseInt(numPlayersInput.value);i++){
+    const inp = document.createElement('input');
+    inp.type='text';
+    inp.placeholder='Player '+(i+1);
+    inp.id='player_'+i;
+    inp.style.margin='5px';
+    playerInputs.appendChild(inp);
+    playerInputs.appendChild(document.createElement('br'));
+  }
+});
+
+// Start game -> assign players
+startBtn.addEventListener('click',()=>{
+  playerNames=[];
+  scores={};
+  for(let i=0;i<parseInt(numPlayersInput.value);i++){
+    const name=document.getElementById('player_'+i).value.trim();
+    if(!name){ alert('Fill all names'); return; }
+    playerNames.push(name);
+    scores[name]=0;
+  }
+  playerScreen.classList.add('hidden');
+  revealScreen.classList.remove('hidden');
+  revealIndex=0;
+  pickTopic();
+});
+
+// Pick random topic
+function pickTopic(){
+  const list = topics[currentCategory];
+  secretTopic = list[Math.floor(Math.random()*list.length)];
+  revealText.textContent = `First Player: Click Next to reveal!`;
+  revealedTopics=[];
+}
+
+// --- Reveal & redo ---
+function assignImposters(){
+  const numImposters=parseInt(numImpostersInput.value);
+  impostersIndexes=[];
+  while(impostersIndexes.length<numImposters){
+    const rand=Math.floor(Math.random()*playerNames.length);
+    if(!impostersIndexes.includes(rand)) impostersIndexes.push(rand);
+  }
+}
+
+nextPlayerBtn.addEventListener('click',()=>{
+  if(revealIndex===0) assignImposters();
+  if(revealIndex>=playerNames.length){ startVoting(); return; }
+  const player=playerNames[revealIndex];
+  if(impostersIndexes.includes(revealIndex)){
+    revealText.textContent=`${player} is the IMPOSTER! ❌`;
+  } else {
+    revealText.textContent=`${player} sees topic: ${secretTopic} ✅`;
+  }
+  // Floating emoji
+  const icon=document.createElement('div');
+  icon.classList.add('floating-icon');
+  icon.style.left=Math.random()*90+'vw';
+  icon.style.top='90vh';
+  icon.textContent=getEmojiForCategory(currentCategory);
+  document.body.appendChild(icon);
+  setTimeout(()=>icon.remove(),10000);
+  revealedTopics.push(secretTopic);
+  revealIndex++;
+});
+
+redoBtn.addEventListener('click',()=>{
+  if(revealIndex===1){ pickTopic(); revealText.textContent='First Player: Click Next to reveal!'; revealedTopics[0]=secretTopic; }
+  else alert('Only first player can redo!');
+});
+
+function getEmojiForCategory(cat){
+  switch(cat){
+    case 'NBA': return '🏀';
+    case 'Movies': return '🎬';
+    case 'VideoGames': return '🎮';
+    case 'Anime': return '🌀';
+    case 'Rappers': return '🎤';
+    default: return '❓';
+  }
+}
+
+// --- Voting ---
+function startVoting(){
+  revealScreen.classList.add('hidden');
+  voteScreen.classList.remove('hidden');
+  currentVoterIndex=0;
+  votes=[];
+  showVoteForCurrentVoter();
+}
+
+function showVoteForCurrentVoter(){
+  voteTitle.textContent=`${playerNames[currentVoterIndex]}, vote for suspected imposter!`;
+  voteOptions.innerHTML='';
+  playerNames.forEach(p=>{
+    const btn=document.createElement('button');
+    btn.classList.add('vote-btn');
+    btn.textContent=p;
+    btn.addEventListener('click',()=>castVote(p));
+    voteOptions.appendChild(btn);
+  });
+}
+
+function castVote(votedFor){
+  votes.push({voter:playerNames[currentVoterIndex],votedFor});
+  currentVoterIndex++;
+  if(currentVoterIndex<playerNames.length) showVoteForCurrentVoter();
+  else finishVoting();
+}
+
+function finishVoting() {
+    voteScreen.classList.add('hidden');
+    scoreScreen.classList.remove('hidden');
+
+    // Count votes for each player
+    const voteCount = {};
+    votes.forEach(v => {
+        voteCount[v.votedFor] = (voteCount[v.votedFor] || 0) + 1;
+    });
+
+    const majority = Math.ceil(playerNames.length / 2);
+
+    // Identify imposters who were caught by majority
+    const caughtImposters = impostersIndexes
+        .map(idx => playerNames[idx])
+        .filter(name => (voteCount[name] || 0) >= majority);
+
+    // Non-imposters get points if they voted for a caught imposter
+    votes.forEach(v => {
+        if (!impostersIndexes.includes(playerNames.indexOf(v.voter)) && caughtImposters.includes(v.votedFor)) {
+            scores[v.voter] = (scores[v.voter] || 0) + 1;
+        }
+    });
+
+    // Imposters get points if NOT caught by majority
+    impostersIndexes.forEach(idx => {
+        const imposterName = playerNames[idx];
+        if (!caughtImposters.includes(imposterName)) {
+            scores[imposterName] = (scores[imposterName] || 0) + 1;
+        }
+    });
+
+    // Update scoreboard
+    scoreList.innerHTML = '';
+    playerNames.forEach(p => {
+        const li = document.createElement('li');
+        li.textContent = `${p}: ${scores[p]} points`;
+        scoreList.appendChild(li);
+    });
+}
+
+// --- Next Round ---
+nextRoundBtn.addEventListener('click',()=>{
+  scoreScreen.classList.add('hidden');
+  revealScreen.classList.remove('hidden');
+  revealIndex=0;
+  pickTopic();
+});
+
+changeTopicBtn.addEventListener('click',()=>{
+  pickTopic();
+});
 </script>
 </body>
 </html>
