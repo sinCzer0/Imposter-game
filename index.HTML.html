@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Category-Based Imposter Game</title>
+
+  <!-- PWA + Mobile Meta -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Imposter Game" />
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 40px;
+      padding: 10px;
+    }
+    button {
+      margin: 5px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    input, select {
+      padding: 6px;
+      margin: 4px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Category-Based Imposter Game</h2>
+
+  <!-- Category Selector -->
+  <label>
+    Choose a category:
+    <select id="categorySelect">
+      <option value="NBA">NBA Players</option>
+      <option value="Movies">Movies</option>
+      <option value="VideoGames">Video Games</option>
+      <option value="Anime">Anime</option>
+      <option value="Rappers">Rappers</option>
+    </select>
+  </label>
+  <br /><br />
+  <button onclick="pickTopic()">Pick Topic</button>
+  <p id="pickedTopic">Topic is hidden. Use Reveal to see it!</p>
+
+  <hr />
+
+  <!-- Player Setup -->
+  <label>
+    Number of players:
+    <input type="number" id="numPlayers" value="3" min="2" max="20" />
+  </label>
+
+  <div id="playerInputs"></div>
+
+  <!-- Imposter Settings -->
+  <label>
+    Number of Imposters:
+    <input type="number" id="numImposters" value="1" min="1" max="10" />
+  </label>
+
+  <br /><br />
+
+  <button onclick="createPlayerInputs()">Set Player Names</button>
+  <button onclick="startRound()">Start Round</button>
+  <button onclick="revealNext()">Reveal</button>
+
+  <p id="result"></p>
+  <p id="imposterInfo" style="color:red;"></p>
+
+  <hr />
+
+  <h3>Revealed Players</h3>
+  <ul id="revealList"></ul>
+
+  <script>
+    let secretTopic = "";
+    let round = [];
+    let revealIndex = 0;
+    let playerNames = [];
+    let impostersIndexes = [];
+
+    const topics = {
+      NBA: ["LeBron James","Michael Jordan","Kobe Bryant","Shaquille O'Neal","Magic Johnson"],
+      Movies: ["The Godfather","Inception","Titanic","The Matrix","Avengers"],
+      VideoGames: ["Super Mario","The Legend of Zelda","Halo","Metal Gear Solid","Tomb Raider"],
+      Anime: ["Naruto","Dragon Ball","One Piece","Bleach","One Punch Man"],
+      Rappers: ["Kendrick Lamar","Drake","J. Cole","Kanye West","Nicki Minaj"]
+    };
+
+    function pickTopic() {
+      const category = document.getElementById("categorySelect").value;
+      const list = topics[category];
+      secretTopic = list[Math.floor(Math.random() * list.length)];
+      document.getElementById("pickedTopic").textContent = "Topic selected!";
+    }
+
+    function createPlayerInputs() {
+      const numPlayers = parseInt(document.getElementById("numPlayers").value);
+      const container = document.getElementById("playerInputs");
+      container.innerHTML = "";
+
+      for (let i = 0; i < numPlayers; i++) {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = "Player " + (i + 1);
+        input.id = "player_" + i;
+        container.appendChild(input);
+        container.appendChild(document.createElement("br"));
+      }
+    }
+
+    function startRound() {
+      const numPlayers = parseInt(document.getElementById("numPlayers").value);
+      const numImposters = parseInt(document.getElementById("numImposters").value);
+
+      playerNames = [];
+      for (let i = 0; i < numPlayers; i++) {
+        const name = document.getElementById("player_" + i)?.value.trim();
+        if (!name) {
+          alert("Please enter all player names");
+          return;
+        }
+        playerNames.push(name);
+      }
+
+      round = Array(numPlayers - numImposters).fill(true)
+        .concat(Array(numImposters).fill(false));
+
+      for (let i = round.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [round[i], round[j]] = [round[j], round[i]];
+      }
+
+      impostersIndexes = [];
+      round.forEach((v, i) => { if (!v) impostersIndexes.push(i); });
+
+      revealIndex = 0;
+      document.getElementById("revealList").innerHTML = "";
+      document.getElementById("result").textContent = "Round started!";
+
+      if (impostersIndexes.length > 1 && impostersIndexes.includes(0)) {
+        const others = impostersIndexes.filter(i => i !== 0).map(i => playerNames[i]);
+        document.getElementById("imposterInfo").textContent =
+          "Other imposters: " + others.join(", ");
+      } else {
+        document.getElementById("imposterInfo").textContent = "";
+      }
+    }
+
+    function revealNext() {
+      if (revealIndex >= round.length) {
+        document.getElementById("result").textContent = "Round finished!";
+        return;
+      }
+
+      const name = playerNames[revealIndex];
+      const isGood = round[revealIndex];
+
+      document.getElementById("result").textContent =
+        isGood ? `${name}: ${secretTopic} ✅` : `${name} is an IMPOSTER ❌`;
+
+      const li = document.createElement("li");
+      li.textContent = name;
+      document.getElementById("revealList").appendChild(li);
+
+      revealIndex++;
+    }
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js");
+    }
+  </script>
+
+</body>
+</html>l>
