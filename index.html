@@ -1,184 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Category-Based Imposter Game</title>
-
-  <!-- PWA + Mobile Meta -->
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Imposter Game" />
-
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin-top: 40px;
-      padding: 10px;
-    }
-    button {
-      margin: 5px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    input, select {
-      padding: 6px;
-      margin: 4px;
-      font-size: 16px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Imposter Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Imposter Game" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<style>
+body {font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin:0; min-height:100vh; background: radial-gradient(circle at top, #1f1c2c, #928dab); color:white; overflow:hidden; display:flex; justify-content:center; align-items:center; -webkit-tap-highlight-color: transparent;}
+.card {background: rgba(255,255,255,0.12); backdrop-filter: blur(20px); border-radius: 28px; padding: 24px; width:95%; max-width:420px; box-shadow:0 30px 60px rgba(0,0,0,0.45); animation:fadeIn 0.5s ease; position:relative; z-index:10; touch-action: manipulation;}
+h2,h3{margin-top:0;text-align:center;}
+label{display:block;margin-top:14px;font-size:14px;opacity:0.9;}
+input,select{width:100%;padding:14px;margin-top:6px;border-radius:16px;border:none;font-size:18px;}
+button{width:100%;margin-top:16px;padding:16px;font-size:18px;border:none;border-radius:20px;background:linear-gradient(135deg,#ff512f,#dd2476);color:white;font-weight:700;cursor:pointer;transition:transform 0.15s ease,box-shadow 0.15s ease;}
+button:active{transform:scale(0.96);box-shadow:inset 0 4px 12px rgba(0,0,0,0.4);}
+.hidden{display:none;}
+.center{text-align:center;}
+.countdown{font-size:72px;font-weight:bold;animation:pop 0.4s ease;}
+.reveal{font-size:26px;margin-top:20px;animation:pop 0.4s ease;}
+ul{padding-left:20px;}
+.vote-btn.selected{background-color:#4caf50;}
+.floating-icon{position:absolute;width:36px;height:36px;opacity:0.8;animation:float 10s linear infinite;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pop{0%{transform:scale(0.7);}100%{transform:scale(1);}}
+@keyframes float{0%{transform:translateY(100vh) translateX(0);}100%{transform:translateY(-10vh) translateX(20vw);}}
+</style>
 </head>
 <body>
+<div class="card">
+<div id="setupScreen">
+<h2>🎭 Imposter Game</h2>
+<label>Category</label>
+<select id="categorySelect">
+<option value="NBA">NBA Players & Teams</option>
+<option value="Movies">Movies</option>
+<option value="VideoGames">Video Games & Characters</option>
+<option value="Anime">Anime & Characters</option>
+<option value="Rappers">Rappers</option>
+</select>
+<label>Players</label>
+<input type="number" id="numPlayers" value="3" min="2" max="20" />
+<label>Imposters</label>
+<input type="number" id="numImposters" value="1" min="1" max="10" />
+<button onclick="createPlayerInputs()">Next</button>
+</div>
+<div id="playerScreen" class="hidden">
+<h3>Enter Player Names</h3>
+<div id="playerInputs"></div>
+<button onclick="startRound()">Start Game</button>
+</div>
+<div id="passScreen" class="hidden center">
+<h3 id="passTitle"></h3>
+<button onclick="startCountdown()">Reveal</button>
+</div>
+<div id="countdownScreen" class="hidden center">
+<div id="countdown" class="countdown"></div>
+</div>
+<div id="revealScreen" class="hidden center">
+<div id="revealText" class="reveal"></div>
+<button onclick="nextPlayer()">Hide & Pass Phone</button>
+<button onclick="redoReveal()">Redo Reveal</button>
+</div>
+<div id="voteScreen" class="hidden center">
+<h3>Vote for the Imposter</h3>
+<div id="voteOptions"></div>
+<button onclick="startDiscussion()">Start Discussion</button>
+</div>
+<div id="timerScreen" class="hidden center">
+<h3>Discussion Time</h3>
+<div id="timer" class="countdown"></div>
+<button onclick="endDiscussion()">End Early</button>
+</div>
+<div id="scoreScreen" class="hidden center">
+<h3>Scoreboard</h3>
+<ul id="scoreList"></ul>
+<button onclick="nextRound()">Next Round</button>
+</div>
+</div>
+<audio id="lofi" src="https://assets.mixkit.co/music/preview/mixkit-lo-fi-chill-hop-145.mp3" loop autoplay playsinline></audio>
+<audio id="beep" src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" playsinline></audio>
+<script>
+const topics = {
+NBA:["LeBron James","Michael Jordan","Kobe Bryant","Shaquille O'Neal","Magic Johnson","Boston Celtics","Los Angeles Lakers","Chicago Bulls","San Antonio Spurs","Golden State Warriors","New York Knicks","Miami Heat","Dallas Mavericks","Philadelphia 76ers","Toronto Raptors","Utah Jazz","Houston Rockets","Phoenix Suns","Indiana Pacers","Brooklyn Nets"],
+Movies:["The Godfather","Inception","Titanic","The Matrix","Avengers","Star Wars","The Dark Knight","Pulp Fiction","Fight Club","Forrest Gump"],
+VideoGames:["Super Mario","Mario","Luigi","Link","Zelda","Ganondorf","Halo Master Chief","Cortana","Lara Croft","Tomb Raider","Solid Snake","Metal Gear","Cloud Strife","Final Fantasy","Sonic","Tails","Knuckles","Mega Man","Pac-Man","Chun-Li","Ryu","Kirby","Samus Aran","Donkey Kong","Crash Bandicoot","Spyro","Fortnite Character","Overwatch Character","Minecraft Steve","Enderman","Villager","Pokemon Pikachu","Charizard","Mario Kart","Animal Crossing","Splatoon","Pokemon Trainer","Goku","Naruto","Sasuke","Sakura","Kirito","Asuna","Eren","Mikasa"] ,
+Anime:["Naruto","Sasuke","Sakura","Dragon Ball Goku","Vegeta","Frieza","One Piece Luffy","Zoro","Nami","Bleach Ichigo","Rukia","Aizen","One Punch Man Saitama","Genos","Attack on Titan Eren","Mikasa","Levi","Death Note Light","L","My Hero Academia Deku","Bakugo","All Might","Fullmetal Alchemist Edward","Alphonse","Demon Slayer Tanjiro","Nezuko"] ,
+Rappers:["Kendrick Lamar","Drake","J. Cole","Kanye West","Nicki Minaj","Eminem","Jay-Z","Tupac Shakur","Notorious B.I.G.","Lil Wayne"]
+};
+const extraNBA = ["Stephen Curry","Kevin Durant","Tim Duncan","Dirk Nowitzki","Allen Iverson","Chris Paul","Russell Westbrook","James Harden","Anthony Davis","Dwyane Wade","Karl Malone","Charles Barkley","Hakeem Olajuwon","Patrick Ewing","John Stockton","Steve Nash","Ray Allen","Reggie Miller","Paul Pierce","Carmelo Anthony","Dwight Howard","Vince Carter","Gary Payton","Kevin Garnett","Luka Doncic","Joel Embiid","Julius Erving","Bill Russell","Wilt Chamberlain","Oscar Robertson","Jerry West","Magic Johnson","Larry Bird","Klay Thompson","Draymond Green","Clyde Drexler","Dennis Rodman","Scottie Pippen","Steve Kerr","Derrick Rose","Damian Lillard","Kyrie Irving","Giannis Antetokounmpo","Karl-Anthony Towns","Anthony Edwards","Trae Young","Devin Booker","Bradley Beal"];
+topics.NBA.push(...extraNBA);
+const extraRappers = ["Ice Cube","Snoop Dogg","50 Cent","Nas","Lil Kim","Travis Scott","Post Malone","Lil Uzi Vert","Migos","Future","Tyler, The Creator","Big Sean","Schoolboy Q","Logic","JID","A$AP Rocky","21 Savage","Doja Cat","Megan Thee Stallion","Dr. Dre","Missy Elliott","T.I.","Gucci Mane","Chief Keef","Wale","Big K.R.I.T.","Joyner Lucas","Cordae","Nipsey Hussle","Juice WRLD","XXXTentacion","Pop Smoke","Fabolous","DMX","Common","Lil Baby","DaBaby","Roddy Ricch","Pusha T","E-40","Busta Rhymes","Lil Yachty","Machine Gun Kelly","Tech N9ne","KRS-One","Rakim","Kool G Rap","MC Lyte","Queen Latifah","Lil Wayne","Eminem"];
+topics.Rappers.push(...extraRappers);
 
-  <h2>Category-Based Imposter Game</h2>
-
-  <!-- Category Selector -->
-  <label>
-    Choose a category:
-    <select id="categorySelect">
-      <option value="NBA">NBA Players</option>
-      <option value="Movies">Movies</option>
-      <option value="VideoGames">Video Games</option>
-      <option value="Anime">Anime</option>
-      <option value="Rappers">Rappers</option>
-    </select>
-  </label>
-  <br /><br />
-  <button onclick="pickTopic()">Pick Topic</button>
-  <p id="pickedTopic">Topic is hidden. Use Reveal to see it!</p>
-
-  <hr />
-
-  <!-- Player Setup -->
-  <label>
-    Number of players:
-    <input type="number" id="numPlayers" value="3" min="2" max="20" />
-  </label>
-
-  <div id="playerInputs"></div>
-
-  <!-- Imposter Settings -->
-  <label>
-    Number of Imposters:
-    <input type="number" id="numImposters" value="1" min="1" max="10" />
-  </label>
-
-  <br /><br />
-
-  <button onclick="createPlayerInputs()">Set Player Names</button>
-  <button onclick="startRound()">Start Round</button>
-  <button onclick="revealNext()">Reveal</button>
-
-  <p id="result"></p>
-  <p id="imposterInfo" style="color:red;"></p>
-
-  <hr />
-
-  <h3>Revealed Players</h3>
-  <ul id="revealList"></ul>
-
-  <script>
-    let secretTopic = "";
-    let round = [];
-    let revealIndex = 0;
-    let playerNames = [];
-    let impostersIndexes = [];
-
-    const topics = {
-      NBA: ["LeBron James","Michael Jordan","Kobe Bryant","Shaquille O'Neal","Magic Johnson"],
-      Movies: ["The Godfather","Inception","Titanic","The Matrix","Avengers"],
-      VideoGames: ["Super Mario","The Legend of Zelda","Halo","Metal Gear Solid","Tomb Raider"],
-      Anime: ["Naruto","Dragon Ball","One Piece","Bleach","One Punch Man"],
-      Rappers: ["Kendrick Lamar","Drake","J. Cole","Kanye West","Nicki Minaj"]
-    };
-
-    function pickTopic() {
-      const category = document.getElementById("categorySelect").value;
-      const list = topics[category];
-      secretTopic = list[Math.floor(Math.random() * list.length)];
-      document.getElementById("pickedTopic").textContent = "Topic selected!";
-    }
-
-    function createPlayerInputs() {
-      const numPlayers = parseInt(document.getElementById("numPlayers").value);
-      const container = document.getElementById("playerInputs");
-      container.innerHTML = "";
-
-      for (let i = 0; i < numPlayers; i++) {
-        const input = document.createElement("input");
-        input.type = "text";
-        input.placeholder = "Player " + (i + 1);
-        input.id = "player_" + i;
-        container.appendChild(input);
-        container.appendChild(document.createElement("br"));
-      }
-    }
-
-    function startRound() {
-      const numPlayers = parseInt(document.getElementById("numPlayers").value);
-      const numImposters = parseInt(document.getElementById("numImposters").value);
-
-      playerNames = [];
-      for (let i = 0; i < numPlayers; i++) {
-        const name = document.getElementById("player_" + i)?.value.trim();
-        if (!name) {
-          alert("Please enter all player names");
-          return;
-        }
-        playerNames.push(name);
-      }
-
-      round = Array(numPlayers - numImposters).fill(true)
-        .concat(Array(numImposters).fill(false));
-
-      for (let i = round.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [round[i], round[j]] = [round[j], round[i]];
-      }
-
-      impostersIndexes = [];
-      round.forEach((v, i) => { if (!v) impostersIndexes.push(i); });
-
-      revealIndex = 0;
-      document.getElementById("revealList").innerHTML = "";
-      document.getElementById("result").textContent = "Round started!";
-
-      if (impostersIndexes.length > 1 && impostersIndexes.includes(0)) {
-        const others = impostersIndexes.filter(i => i !== 0).map(i => playerNames[i]);
-        document.getElementById("imposterInfo").textContent =
-          "Other imposters: " + others.join(", ");
-      } else {
-        document.getElementById("imposterInfo").textContent = "";
-      }
-    }
-
-    function revealNext() {
-      if (revealIndex >= round.length) {
-        document.getElementById("result").textContent = "Round finished!";
-        return;
-      }
-
-      const name = playerNames[revealIndex];
-      const isGood = round[revealIndex];
-
-      document.getElementById("result").textContent =
-        isGood ? `${name}: ${secretTopic} ✅` : `${name} is an IMPOSTER ❌`;
-
-      const li = document.createElement("li");
-      li.textContent = name;
-      document.getElementById("revealList").appendChild(li);
-
-      revealIndex++;
-    }
-
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js");
-    }
-  </script>
-
+let secretTopic=""; let playerNames=[]; let roles=[]; let currentPlayer=0; let votes={}; let scores={}; let discussionTime=20; let revealedTopics=[];
+function vibrate(ms=200){if(navigator.vibrate) navigator.vibrate(ms);}
+function playBeep(){document.getElementById('beep').play();}
+function createPlayerInputs(){setupScreen.classList.add('hidden'); playerScreen.classList.remove('hidden'); playerInputs.innerHTML=''; for(let i=0;i<+numPlayers.value;i++){const input=document.createElement('input'); input.placeholder=`Player ${i+1}`; input.id=`player_${i}`; playerInputs.appendChild(input);}}
+function startRound(){
+  const cat = categorySelect.value;
+  revealedTopics = topics[cat].sort(()=>0.5-Math.random()).slice();
+  secretTopic = revealedTopics.shift();
+  playerNames=[];
+  for(let i=0;i<+numPlayers.value;i++){const name=document.getElementById(`player_${i}`).value.trim(); if(!name)return alert('Fill all names'); playerNames.push(name); scores[name]=scores[name]||0;}
+  roles=Array(playerNames.length).fill(secretTopic);
+  for(let i=0;i<+numImposters.value;i++)roles[i]=null;
+  roles.sort(()=>Math.random()-0.5);
+  playerScreen.classList.add('hidden'); currentPlayer=0; showPass();
+  generateFloatingIcons(cat);
+}
+function showPass(){passScreen.classList.remove('hidden'); revealScreen.classList.add('hidden'); passTitle.textContent=`Pass phone to ${playerNames[currentPlayer]}`;}
+function startCountdown(){passScreen.classList.add('hidden'); countdownScreen.classList.remove('hidden'); let count=3; countdown.textContent=count; playBeep(); vibrate(100); const interval=setInterval(()=>{count--; if(count===0){clearInterval(interval);countdownScreen.classList.add('hidden'); revealRole();} else{countdown.textContent=count; playBeep(); vibrate(100);}},700);}
+function revealRole(){revealScreen.classList.remove('hidden'); revealText.textContent=roles[currentPlayer]?`Your topic: ${roles[currentPlayer]} ✅`:'You are the IMPOSTER ❌'; vibrate(300);}
+function redoReveal(){if(revealedTopics.length>0){roles[currentPlayer]=revealedTopics.shift(); revealRole();}}
+function nextPlayer(){currentPlayer++; if(currentPlayer>=playerNames.length){revealScreen.classList.add('hidden'); showVoting(); return;} showPass();}
+function showVoting(){votes={}; voteScreen.classList.remove('hidden'); voteOptions.innerHTML=''; playerNames.forEach(name=>{const btn=document.createElement('button'); btn.textContent=name; btn.classList.add('vote-btn'); btn.onclick=()=>{btn.classList.toggle('selected'); if(btn.classList.contains('selected')) votes[name]=(votes[name]||0)+1; else votes[name]=(votes[name]||0)-1;}; voteOptions.appendChild(btn);});}
+function startDiscussion(){voteScreen.classList.add('hidden'); timerScreen.classList.remove('hidden'); let t=discussionTime; timer.textContent=t; const interval=setInterval(()=>{t--; timer.textContent=t; if(t<=0){clearInterval(interval); timerScreen.classList.add('hidden'); showScores();}},1000);}
+function endDiscussion(){timerScreen.classList.add('hidden'); showScores();}
+function showScores(){scoreScreen.classList.remove('hidden'); scoreList.innerHTML=''; playerNames.forEach(name=>{let score=(roles[playerNames.indexOf(name)]===null?1:0)+(votes[name]||0); scores[name]+=score; const li=document.createElement('li'); li.textContent=`${name}: ${scores[name]}`; scoreList.appendChild(li);});}
+function nextRound(){scoreScreen.classList.add('hidden'); currentPlayer=0; votes={}; roles=[]; showPass();}
+function generateFloatingIcons(category){document.querySelectorAll('.floating-icon').forEach(e=>e.remove()); const emojis={"NBA":"🏀","Movies":"🎬","VideoGames":"🎮","Anime":"🌸","Rappers":"🎤"}; for(let i=0;i<25;i++){const icon=document.createElement('div'); icon.className='floating-icon'; icon.textContent=emojis[category]||'✨'; icon.style.left=Math.random()*90+'vw'; icon.style.top=Math.random()*90+'vh'; icon.style.fontSize=(22+Math.random()*22)+'px'; document.body.appendChild(icon);}}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('service-worker.js');}
+</script>
 </body>
-</html>l>
+</html>
