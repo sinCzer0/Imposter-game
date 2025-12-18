@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Imposter Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Imposter Game" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin:0;
+  min-height:100vh;
+  background: linear-gradient(135deg, #ff512f, #dd2476, #f7b733, #fc4a1a);
+  background-size: 400% 400%;
+  color:white;
+  overflow:hidden;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  -webkit-tap-highlight-color: transparent;
+  animation:backgroundAnim 30s ease infinite;
+}
+@keyframes backgroundAnim {
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+.card {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(25px);
+  border-radius: 32px;
+  padding: 28px;
+  width:95%;
+  max-width:460px;
+  box-shadow:0 30px 60px rgba(0,0,0,0.55);
+  animation:fadeIn 0.5s ease;
+  position:relative;
+  z-index:10;
+  touch-action: manipulation;
+  border: 2px solid rgba(255,255,255,0.3);
+}
+h2,h3{margin-top:0;text-align:center;}
+label{display:block;margin-top:14px;font-size:16px;opacity:0.95;}
+input,select{width:100%;padding:16px;margin-top:6px;border-radius:18px;border:none;font-size:18px;}
+button{width:100%;margin-top:16px;padding:18px;font-size:18px;border:none;border-radius:22px;background:linear-gradient(135deg,#ff512f,#dd2476,#fbc531,#ff4b1f);color:white;font-weight:800;cursor:pointer;transition:transform 0.15s ease,box-shadow 0.15s ease, opacity 0.15s ease, filter 0.2s ease;}
+button:hover{filter:brightness(1.15) drop-shadow(0 0 8px rgba(255,255,255,0.6));}
+button:active, .vote-btn.selected{transform:scale(0.95); opacity:0.75;}
+.hidden{display:none;}
+.center{text-align:center;}
+.countdown{font-size:78px;font-weight:bold;color:#ffeaa7;animation:pop 0.4s ease;}
+.reveal{font-size:28px;margin-top:20px;color:#81ecec;animation:pop 0.4s ease;}
+ul{padding-left:20px;}
+.floating-icon{position:absolute;width:40px;height:40px;opacity:0.85;animation:float 8s linear infinite;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pop{0%{transform:scale(0.7);}50%{transform:scale(1.2);}100%{transform:scale(1);}}
+@keyframes float{0%{transform:translateY(100vh) translateX(0) rotate(0deg);}50%{transform:translateY(50vh) translateX(10vw) rotate(180deg);}100%{transform:translateY(-10vh) translateX(20vw) rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="card">
+<div id="setupScreen">
+<h2>🎉 Imposter Game 🎉</h2>
+<label>Category</label>
+<select id="categorySelect">
+<option value="NBA">NBA Players & Teams</option>
+<option value="Movies">Movies</option>
+<option value="VideoGames">Video Games & Characters</option>
+<option value="Anime">Anime & Characters</option>
+<option value="Rappers">Rappers</option>
+</select>
+<label>Players</label>
+<input type="number" id="numPlayers" value="3" min="2" max="20" />
+<label>Imposters</label>
+<input type="number" id="numImposters" value="1" min="1" max="10" />
+<button onclick="createPlayerInputs()">Next</button>
+</div>
+<div id="playerScreen" class="hidden">
+<h3>Enter Player Names</h3>
+<div id="playerInputs"></div>
+<button onclick="startRound()">Start Game</button>
+</div>
+<div id="passScreen" class="hidden center">
+<h3 id="passTitle"></h3>
+<button onclick="startCountdown()">Reveal 🎲</button>
+</div>
+<div id="countdownScreen" class="hidden center">
+<div id="countdown" class="countdown"></div>
+</div>
+<div id="revealScreen" class="hidden center">
+<div id="revealText" class="reveal"></div>
+<button onclick="nextPlayer()">Hide & Pass Phone ⏩</button>
+<button onclick="redoReveal()">Redo Reveal 🔄</button>
+</div>
+<div id="voteScreen" class="hidden center">
+<h3>Vote for the Imposter 🕵️‍♂️</h3>
+<div id="voteOptions"></div>
+<button onclick="startDiscussion()">Start Discussion 💬</button>
+</div>
+<div id="timerScreen" class="hidden center">
+<h3>Discussion Time ⏱️</h3>
+<div id="timer" class="countdown"></div>
+<button onclick="endDiscussion()">End Early ⏹️</button>
+</div>
+<div id="scoreScreen" class="hidden center">
+<h3>Scoreboard 🏆</h3>
+<ul id="scoreList"></ul>
+<button onclick="nextRound()">Next Round ▶️</button>
+</div>
+</div>
+<audio id="lofi" src="https://assets.mixkit.co/music/preview/mixkit-lo-fi-chill-hop-145.mp3" loop autoplay playsinline></audio>
+<audio id="beep" src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" playsinline></audio>
+<script>
+const topics = {NBA:["LeBron James","Michael Jordan","Kobe Bryant"], Movies:["The Godfather","Inception"], VideoGames:["Mario","Link","Lara Croft"], Anime:["Naruto","Goku","Luffy"], Rappers:["Kendrick Lamar","Drake"]};
+let secretTopic=""; let playerNames=[]; let roles=[]; let currentPlayer=0; let votes={}; let scores={}; let discussionTime=20; let revealedTopics=[];
+let maxVotes=0;
+function vibrate(ms=200){if(navigator.vibrate) navigator.vibrate(ms);}
+function playBeep(){document.getElementById('beep').play();}
+function createPlayerInputs(){setupScreen.classList.add('hidden'); playerScreen.classList.remove('hidden'); playerInputs.innerHTML=''; for(let i=0;i<+numPlayers.value;i++){const input=document.createElement('input'); input.placeholder=`Player ${i+1}`; input.id=`player_${i}`; playerInputs.appendChild(input);}}
+function startRound(){const cat=categorySelect.value;revealedTopics=topics[cat].sort(()=>0.5-Math.random()).slice(); if(secretTopic==="") secretTopic=revealedTopics.shift(); playerNames=[]; maxVotes=+numPlayers.value; for(let i=0;i<+numPlayers.value;i++){const name=document.getElementById(`player_${i}`).value.trim(); if(!name)return alert('Fill all names'); playerNames.push(name); scores[name]=scores[name]||0;}
+roles=Array(playerNames.length).fill(secretTopic); for(let i=0;i<+numImposters.value;i++)roles[i]=null; roles.sort(()=>Math.random()-0.5); playerScreen.classList.add('hidden'); currentPlayer=0; showPass(); generateFloatingIcons(cat);}
+function showPass(){passScreen.classList.remove('hidden'); revealScreen.classList.add('hidden'); passTitle.textContent=`Pass phone to ${playerNames[currentPlayer]}`;}
+function startCountdown(){passScreen.classList.add('hidden'); countdownScreen.classList.remove('hidden'); let count=3; countdown.textContent=count; playBeep(); vibrate(100); const interval=setInterval(()=>{count--; if(count===0){clearInterval(interval);countdownScreen.classList.add('hidden'); revealRole();} else{countdown.textContent=count; playBeep(); vibrate(100);}},700);}
+function revealRole(){revealScreen.classList.remove('hidden'); revealText.textContent=roles[currentPlayer]?`Your topic: ${roles[currentPlayer]} ✅`:'You are the IMPOSTER ❌'; vibrate(300);}
+function redoReveal(){roles[currentPlayer]=secretTopic; revealRole();}
+function nextPlayer(){currentPlayer++; if(currentPlayer>=playerNames.length){revealScreen.classList.add('hidden'); showVoting(); return;} showPass();}
+function showVoting(){votes={}; voteScreen.classList.remove('hidden'); voteOptions.innerHTML=''; let voteCount=0; playerNames.forEach(name=>{const btn=document.createElement('button'); btn.textContent=name; btn.classList.add('vote-btn'); btn.onclick=()=>{if(!btn.classList.contains('selected') && voteCount>=maxVotes) return; btn.classList.toggle('selected'); btn.style.opacity=btn.classList.contains('selected')?0.6:1; voteCount=Array.from(document.querySelectorAll('.vote-btn.selected')).length;}; voteOptions.appendChild(btn);});}
+function startDiscussion(){voteScreen.classList.add('hidden'); timerScreen.classList.remove('hidden'); let t=discussionTime; timer.textContent=t; const interval=setInterval(()=>{t--; timer.textContent=t; if(t<=0){clearInterval(interval); timerScreen.classList.add('hidden'); showScores();}},1000);}
+function endDiscussion(){timerScreen.classList.add('hidden'); showScores();}
+function showScores(){scoreScreen.classList.remove('hidden'); scoreList.innerHTML=''; playerNames.forEach(name=>{let score=(roles[playerNames.indexOf(name)]===null?1:0)+(votes[name]||0); scores[name]+=score; const li=document.createElement('li'); li.textContent=`${name}: ${scores[name]}`; scoreList.appendChild(li);});}
+function nextRound(){scoreScreen.classList.add('hidden'); currentPlayer=0; votes={}; roles=[]; showPass();}
+function generateFloatingIcons(category){document.querySelectorAll('.floating-icon').forEach(e=>e.remove()); const emojis={"NBA":"🏀","Movies":"🎬","VideoGames":"🎮","Anime":"🌸","Rappers":"🎤"}; for(let i=0;i<35;i++){const icon=document.createElement('div'); icon.className='floating-icon'; icon.textContent=emojis[category]||'✨'; icon.style.left=Math.random()*90+'vw'; icon.style.top=Math.random()*90+'vh'; icon.style.fontSize=(24+Math.random()*24)+'px'; document.body.appendChild(icon);}}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('service-worker.js');}
+</script>
+</body>
+</html>
